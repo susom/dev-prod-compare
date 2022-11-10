@@ -1,0 +1,15 @@
+language: minimal
+services:
+    - docker
+stages:
+  - name: deploy
+    if: branch == main AND type = push
+jobs:
+  include:
+    - stage: deploy
+      script:
+        - echo "$ARTIFACT_REGISTRY_KEY" | docker login -u _json_key_base64 --password-stdin https://us-west1-docker.pkg.dev
+        - export THIRD_PARTY_REPO=us-west1-docker.pkg.dev/som-rit-infrastructure-prod/third-party/prod-dev-compare
+        - docker build -f Dockerfile -t $THIRD_PARTY_REPO:build-$TRAVIS_BUILD_NUMBER -t $THIRD_PARTY_REPO:latest .
+        - docker push $THIRD_PARTY_REPO:build-$TRAVIS_BUILD_NUMBER
+        - docker push $THIRD_PARTY_REPO:latest
