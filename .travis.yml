@@ -1,0 +1,26 @@
+language: minimal
+services:
+    - docker
+
+before_install:
+  # Stop Travis immediately when any build command fails so it is easier to find the problem
+  - set -eo pipefail
+  # Add Google as a Docker mirror because Docker Hub download quotas cause build failures
+  - tmpdaemon=$(mktemp)
+  - sudo jq '."registry-mirrors" += ["https://mirror.gcr.io"]' /etc/docker/daemon.json > $tmpdaemon
+  - sudo mv $tmpdaemon /etc/docker/daemon.json
+  - sudo systemctl daemon-reload
+  - sudo systemctl restart docker
+  - docker system info
+
+script:
+  - export DEV_PROD_CMP_REPO=us-west1-docker.pkg.dev/som-rit-infrastructure-prod/dev-prod-cmp/dev-prod-cmp
+  - docker build -f Dockerfile -t $DEV_PROD_CMP_REPO:build-$TRAVIS_BUILD_NUMBER -t $DEV_PROD_CMP_REPO:latest .
+
+after_success:
+  # Push Docker images for regular (not cron) main builds (credentials are only available on main)
+  - if [ -n "$ARTIFACT_REGISTRY_KEY" ] && [ "$TRAVIS_EVENT_TYPE" = "push" ]; then
+      echo "$ARTIFACT_REGISTRY_KEY" | docker login -u _json_key_base64 --password-stdin https://us-west1-docker.pkg.dev;
+      docker push $DEV_PROD_CMP_REPO:build-$TRAVIS_BUILD_NUMBER;
+      docker push $DEV_PROD_CMP_REPO:latest;
+    fi
