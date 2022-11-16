@@ -14,7 +14,7 @@ before_install:
   - docker system info
 
 script:
-  - export DEV_PROD_CMP_REPO=us-west1-docker.pkg.dev/som-rit-infrastructure-prod/dev-prod-cmp
+  - export DEV_PROD_CMP_REPO=us-west1-docker.pkg.dev/som-rit-infrastructure-prod/dev-prod-cmp/dev-prod-cmp
   - docker build -f Dockerfile -t $DEV_PROD_CMP_REPO:build-$TRAVIS_BUILD_NUMBER -t $DEV_PROD_CMP_REPO:latest .
 
 after_success:
