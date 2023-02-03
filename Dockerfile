@@ -1,4 +1,4 @@
-FROM python:3.11-rc-slim
+FROM python:3.12.0a3-slim-bullseye
 
 ADD compare.sh .
 
